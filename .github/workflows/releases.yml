@@ -26,13 +26,10 @@ jobs:
       - name: Set platform environment
         run: echo "GOARCH=${{ matrix.goarch }}" >> $GITHUB_ENV
 
-      - name: Install dependencies
-        run: |
-          sudo apt update && sudo apt install -yqq libgpgme-dev btrfs-progs libbtrfs-dev
-
       - name: Build binary
         run: |
-          make binary GOARCH=$GOARCH
+          sudo apt update && sudo apt install -yqq libgpgme-dev btrfs-progs libbtrfs-dev
+          make binary
           mv ./bin/prometheus-podman-exporter ./bin/prometheus-podman-exporter-${{ matrix.goarch }}
 
       - name: Create Release
