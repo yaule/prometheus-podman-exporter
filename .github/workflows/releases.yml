@@ -12,36 +12,34 @@ jobs:
       matrix:
         goarch: [amd64, arm64]
     steps:
-      - uses: actions/checkout@v4
+      - name: checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '>=1.21'
 
       - name: Build binary
         run: |
+          echo "GOARCH=${{ matrix.goarch }}" >> $GITHUB_ENV
           sudo apt update && sudo apt install -yqq libgpgme-dev btrfs-progs libbtrfs-dev
           make binary
+          go mod download
           mv ./bin/prometheus-podman-exporter ./bin/prometheus-podman-exporter-${{ matrix.goarch }}
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload files to Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: prometheus-podman-exporter-${{ matrix.goarch }}
+          path: |
+            /bin/prometheus-podman-exporter-${{ matrix.goarch }}
+  
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        if: github.event_name == 'release'
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin/prometheus-podman-exporter-${{ matrix.goarch }}
-          asset_name: prometheus-podman-exporter-${{ matrix.goarch }}-${{ github.ref }}
-          asset_content_type: application/octet-stream
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: prometheus-podman-exporter-${{ matrix.goarch }}
+          tag: ${{ github.ref }}
+          file_glob: true
