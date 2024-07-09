@@ -18,7 +18,7 @@ jobs:
 
       - name: Build binary
         run: |
-          apt update && apt install -yqq libgpgme-dev btrfs-progs libbtrfs-dev
+          sudo apt update && sudo apt install -yqq libgpgme-dev btrfs-progs libbtrfs-dev
           make binary
 
       - name: Create Release
